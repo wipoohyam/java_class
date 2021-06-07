@@ -127,7 +127,6 @@ public class LoginForm extends JFrame implements ActionListener {
 		setVisible(true);
 	}
 
-	// °­»ç´Ô Ãß°¡
 	public static void saveData(Object obj) {
 		FileOutputStream fos = null;
 		ObjectOutputStream oos = null;

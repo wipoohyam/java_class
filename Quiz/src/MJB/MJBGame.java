@@ -1,4 +1,4 @@
-package kr.ac.green;
+package MJB;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;

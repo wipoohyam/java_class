@@ -4,7 +4,10 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -20,7 +23,7 @@ import javax.swing.UIManager;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 
-public class JoinForm extends JFrame{
+public class JoinForm extends JFrame implements ActionListener{
 	private JLabel lblId;
 	private JLabel lblPw;
 	private JLabel lblName;
@@ -34,7 +37,6 @@ public class JoinForm extends JFrame{
 	private JRadioButton rbMale;
 	private JRadioButton rbFemale;
 	
-	private Calendar cal;
 	private JComboBox<Integer> cbYear;
 	private Integer[] cbListYr;
 	private JLabel lblYr;
@@ -58,6 +60,7 @@ public class JoinForm extends JFrame{
 	public JoinForm() {
 		init();
 		setDisplay();
+		addListeners();
 		showFrame();
 		
 		
@@ -74,9 +77,9 @@ public class JoinForm extends JFrame{
 		lblGender = new JLabel("성별");
 		lblBday = new JLabel("생년월일");
 		
-		tfId = new JTextField(10);
-		pfPw = new JPasswordField(10);
-		tfName = new JTextField(10);
+		tfId = new JTextField(15);
+		pfPw = new JPasswordField(15);
+		tfName = new JTextField(15);
 		
 		rbMale = new JRadioButton("남자");
 		rbFemale = new JRadioButton("여자");
@@ -100,11 +103,14 @@ public class JoinForm extends JFrame{
 			cbListMon[i] = i+1;
 		}
 		cbMonth = new JComboBox<Integer>(cbListMon);
+
+		cbDay = new JComboBox<Integer>();
 		cbListDay = new Integer[31];
 		for(int i = 0; i<31; i++) {
-			cbListDay[i] = i+1;
+//			cbListDay[i] = i+1;
+			cbDay.addItem(i+1);
 		}
-		cbDay = new JComboBox<Integer>(cbListDay);
+//		cbDay = new JComboBox<Integer>(cbListDay);
 		lblDay = new JLabel("일");
 		
 		chbHobby1 = new JCheckBox("강도");
@@ -117,9 +123,38 @@ public class JoinForm extends JFrame{
 		bConfirm = new JButton("확인");
 		bCancel = new JButton("취소");
 	}
+	private void addListeners() {
+		cbYear.addActionListener(this);
+		cbMonth.addActionListener(this);
+	}
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		Object o = e.getSource();
+		if(o == cbYear || o==cbMonth) {
+			int y = (int) cbYear.getSelectedItem();
+			int m = (int) cbMonth.getSelectedItem();
+			Calendar calendar = Calendar.getInstance ( );
+			calendar.set ( y, m-1, 1 );
+			int maxDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+			System.out.println(maxDays);
+			setMaxDate(maxDays);
+		}
+	}
+	private void setMaxDate(int days) {
+		cbDay.removeAllItems();
+		for(int i=0;i<days;i++) {
+			cbDay.addItem(i+1);
+		}
+	}
 	private void setDisplay() {
 		JPanel pnlFieldsGrid = new JPanel(new BorderLayout());
-//		JPanel pnlId = new JPanel
+		JPanel pnlId = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		pnlId.add(tfId);
+		JPanel pnlPw = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		pnlPw.add(pfPw);
+		JPanel pnlName = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		pnlName.add(tfName);
+		
 		JPanel pnlRbs = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		pnlRbs.add(rbMale);
 		pnlRbs.add(rbFemale);
@@ -140,9 +175,9 @@ public class JoinForm extends JFrame{
 		pnlCbs.add(cbDay);
 		pnlCbs.add(lblDay);
 
-		pnlFields.add(tfId, FlowLayout.LEFT);
-		pnlFields.add(pfPw, FlowLayout.LEFT);
-		pnlFields.add(tfName, FlowLayout.LEFT);
+		pnlFields.add(pnlId);
+		pnlFields.add(pnlPw);
+		pnlFields.add(pnlName);
 		pnlFields.add(pnlRbs);
 		pnlFields.add(pnlCbs);
 		
@@ -167,6 +202,7 @@ public class JoinForm extends JFrame{
 		add(pnlChbs, BorderLayout.CENTER);
 		add(pnlBtn, BorderLayout.SOUTH);
 	}
+
 	private void showFrame() {
 		setTitle("Join Form");
 		pack();

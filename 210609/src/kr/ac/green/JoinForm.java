@@ -74,9 +74,9 @@ public class JoinForm extends JFrame{
 		lblGender = new JLabel("성별");
 		lblBday = new JLabel("생년월일");
 		
-		tfId = new JTextField(10);
-		pfPw = new JPasswordField(10);
-		tfName = new JTextField(10);
+		tfId = new JTextField(15);
+		pfPw = new JPasswordField(15);
+		tfName = new JTextField(15);
 		
 		rbMale = new JRadioButton("남자");
 		rbFemale = new JRadioButton("여자");
@@ -119,7 +119,13 @@ public class JoinForm extends JFrame{
 	}
 	private void setDisplay() {
 		JPanel pnlFieldsGrid = new JPanel(new BorderLayout());
-//		JPanel pnlId = new JPanel
+		JPanel pnlId = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		pnlId.add(tfId);
+		JPanel pnlPw = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		pnlPw.add(pfPw);
+		JPanel pnlName = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		pnlName.add(tfName);
+		
 		JPanel pnlRbs = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		pnlRbs.add(rbMale);
 		pnlRbs.add(rbFemale);
@@ -140,9 +146,9 @@ public class JoinForm extends JFrame{
 		pnlCbs.add(cbDay);
 		pnlCbs.add(lblDay);
 
-		pnlFields.add(tfId, FlowLayout.LEFT);
-		pnlFields.add(pfPw, FlowLayout.LEFT);
-		pnlFields.add(tfName, FlowLayout.LEFT);
+		pnlFields.add(pnlId);
+		pnlFields.add(pnlPw);
+		pnlFields.add(pnlName);
 		pnlFields.add(pnlRbs);
 		pnlFields.add(pnlCbs);
 		

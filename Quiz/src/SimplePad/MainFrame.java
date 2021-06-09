@@ -379,7 +379,7 @@ public class MainFrame extends JFrame implements ActionListener {
 			fos = new FileOutputStream(path);
 			oos = new ObjectOutputStream(fos);
 			
-			oos.writeObject((Object)content);
+			oos.writeObject(content);
 			oos.flush();
 			oos.reset();
 		} catch (IOException ex) {

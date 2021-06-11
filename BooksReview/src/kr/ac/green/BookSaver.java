@@ -106,7 +106,7 @@ public class BookSaver extends JFrame implements ActionListener{
 		lblBookImg = new JLabel("");
 		lblBookImg.setPreferredSize(dImg);
 		lblBookImg.setOpaque(true);
-		lblBookImg.setIcon(new ImageIcon(setImgSize(fDefault.getAbsolutePath(),dImg)));
+		lblBookImg.setIcon(new ImageIcon(MyUtils.setImgSize(fDefault.getAbsolutePath(),dImg)));
 		
 		chooser = new JFileChooser(".");
 		chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -223,52 +223,20 @@ public class BookSaver extends JFrame implements ActionListener{
 	private void setStarIcon(double rate, int which) {
 		int idx = (int) rate;
 		for(int i = 0; i<idx; i++) {
-			bStars[i].setIcon(new ImageIcon(setImgSize("img/star_filled.png", dStars)));
+			bStars[i].setIcon(new ImageIcon(MyUtils.setImgSize("img/star_filled.png", dStars)));
 		}
 		for(int j=4;j>idx;j--) {
-			bStars[j].setIcon(new ImageIcon(setImgSize("img/star_empty.png", dStars)));
+			bStars[j].setIcon(new ImageIcon(MyUtils.setImgSize("img/star_empty.png", dStars)));
 		}
 		if(which == EMPTYSTAR) {
-			bStars[idx].setIcon(new ImageIcon(setImgSize("img/star_empty.png", dStars)));
+			bStars[idx].setIcon(new ImageIcon(MyUtils.setImgSize("img/star_empty.png", dStars)));
 		}else if(which == HALFSTAR) {
-			bStars[idx].setIcon(new ImageIcon(setImgSize("img/star_half.png", dStars)));
+			bStars[idx].setIcon(new ImageIcon(MyUtils.setImgSize("img/star_half.png", dStars)));
 		}else if(which == FILLEDSTAR) {
-			bStars[idx].setIcon(new ImageIcon(setImgSize("img/star_filled.png", dStars)));
+			bStars[idx].setIcon(new ImageIcon(MyUtils.setImgSize("img/star_filled.png", dStars)));
 		}
 	}
-	private Image setImgSize(String path, Dimension d) {
-		double dWidth = d.getWidth();
-		double dHeight = d.getHeight();
-		double iWidth = 1;
-		double iHeight = 1;
-		ImageIcon icon = new ImageIcon(path);
-		Image img = icon.getImage();
-		try {
-			BufferedImage bImg = ImageIO.read(new File(path));
-			iWidth = (double) bImg.getWidth();
-			iHeight = (double) bImg.getHeight();
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		//가로세로 비율, 1보다 크면 가로로 길다.
-		double dRate = dWidth / dHeight;
-		double iRate = iWidth / iHeight;
-		System.out.println("dRate:"+dRate+",iRate:"+iRate);
-		System.out.println("dWidth:"+dWidth+",dHeight:"+dHeight);
-		System.out.println("iHeight:"+iHeight+",iHeight:"+iHeight);
-		if(dRate > iRate) {
-			//Dimension이 Image보다 가로로 더 길때->Width = iWidth, Height = dHeight
-			Image newImg = img.getScaledInstance((int) iWidth, (int) dHeight, 0);
-			return newImg;
-		}else if(dRate == iRate){
-			Image newImg = img.getScaledInstance((int) dWidth, (int) dHeight, 0);
-			return newImg;
-		}else {
-			Image newImg = img.getScaledInstance((int) dWidth, (int) iHeight, 0);
-			return newImg;
-		}
-		
-	}
+	
 	private void setDisplay() {
 		//책이미지 영역 
 		JPanel pnlCenter = new JPanel(new BorderLayout());
@@ -418,11 +386,11 @@ public class BookSaver extends JFrame implements ActionListener{
 			int result = chooser.showOpenDialog(this);
 			if(result == JFileChooser.APPROVE_OPTION) {
 				fImg = chooser.getSelectedFile();
-				lblBookImg.setIcon(new ImageIcon(setImgSize(fImg.getAbsolutePath(),dImg)));
+				lblBookImg.setIcon(new ImageIcon(MyUtils.setImgSize(fImg.getAbsolutePath(),dImg)));
 			}
 		}
 		if (obj == bDelImg) {
-			lblBookImg.setIcon(new ImageIcon(setImgSize(fDefault.getAbsolutePath(),dImg)));
+			lblBookImg.setIcon(new ImageIcon(MyUtils.setImgSize(fDefault.getAbsolutePath(),dImg)));
 //			fImg.delete();
 		}
 		//읽은책, 읽고있는책 탭처리 

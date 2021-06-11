@@ -12,6 +12,7 @@ public class test {
 		
 		double d = 1.999;
 		System.out.println((int)d);
+		System.out.println(d);
 				
 	}
 }

@@ -6,21 +6,16 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -32,8 +27,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
 
 public class BookSaver extends JFrame implements ActionListener{
-	//기본폰트 
-	private Font defaultFont = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
 	
 	//책이미지 크기 
 	private Dimension dImg;
@@ -82,10 +75,6 @@ public class BookSaver extends JFrame implements ActionListener{
 	private JButton[] bStars;
 	private double rate;
 	
-	public static final int EMPTYSTAR = 0;
-	public static final int HALFSTAR = 1;
-	public static final int FILLEDSTAR = 2;
-	
 	private JButton bConfirm;
 	private JButton bCancel;
 	
@@ -106,7 +95,7 @@ public class BookSaver extends JFrame implements ActionListener{
 		lblBookImg = new JLabel("");
 		lblBookImg.setPreferredSize(dImg);
 		lblBookImg.setOpaque(true);
-		lblBookImg.setIcon(new ImageIcon(MyUtils.setImgSize(fDefault.getAbsolutePath(),dImg)));
+		MyUtils.setImgSize(lblBookImg, fDefault, dImg);
 		
 		chooser = new JFileChooser(".");
 		chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -150,14 +139,14 @@ public class BookSaver extends JFrame implements ActionListener{
 		bRead.setPreferredSize(dRead);
 		bRead.setBorderPainted(false);
 		bRead.setOpaque(true);
-		bRead.setFont(defaultFont);
+		MyUtils.setDefaultFont(bRead);
 		setCursorHand(bRead);
 		bReading = new JButton("읽고있는책");
 		bReading.setActionCommand("unselected");
 		bReading.setPreferredSize(dRead);
 		bReading.setBorderPainted(false);
 		bReading.setOpaque(true);
-		bReading.setFont(defaultFont);
+		MyUtils.setDefaultFont(bReading);
 		setCursorHand(bReading);
 		setTabButton();
 		
@@ -189,14 +178,17 @@ public class BookSaver extends JFrame implements ActionListener{
 			bStars[i].setActionCommand(String.valueOf(i));
 			setCursorHand(bStars[i]);
 		}
-		setStarIcon(0, EMPTYSTAR);
+		rate = -1;
+		MyUtils.setStarIcon(bStars, rate, dStars);
+		
+		
 		bConfirm = new JButton("저장");
 		bCancel = new JButton("취소");
 		
 	}
 	private JLabel makeTfLabel(String txt) {
 		JLabel lbl = new JLabel(txt);
-		lbl.setFont(defaultFont);
+		MyUtils.setDefaultFont(lbl);
 		lbl.setBorder(new EmptyBorder(0,5,5,0));
 		return lbl;
 	}
@@ -218,22 +210,6 @@ public class BookSaver extends JFrame implements ActionListener{
 			bRead.setForeground(Color.WHITE);
 			bReading.setBackground(selectedBg);
 			bReading.setForeground(Color.BLACK);
-		}
-	}
-	private void setStarIcon(double rate, int which) {
-		int idx = (int) rate;
-		for(int i = 0; i<idx; i++) {
-			bStars[i].setIcon(new ImageIcon(MyUtils.setImgSize("img/star_filled.png", dStars)));
-		}
-		for(int j=4;j>idx;j--) {
-			bStars[j].setIcon(new ImageIcon(MyUtils.setImgSize("img/star_empty.png", dStars)));
-		}
-		if(which == EMPTYSTAR) {
-			bStars[idx].setIcon(new ImageIcon(MyUtils.setImgSize("img/star_empty.png", dStars)));
-		}else if(which == HALFSTAR) {
-			bStars[idx].setIcon(new ImageIcon(MyUtils.setImgSize("img/star_half.png", dStars)));
-		}else if(which == FILLEDSTAR) {
-			bStars[idx].setIcon(new ImageIcon(MyUtils.setImgSize("img/star_filled.png", dStars)));
 		}
 	}
 	
@@ -353,12 +329,13 @@ public class BookSaver extends JFrame implements ActionListener{
 					double w = d.getWidth();
 					double clickedX = me.getX();
 					if ((clickedX < (w / 2))) {
-						setStarIcon(rate, HALFSTAR);
 						rate+=0.5;
+						MyUtils.setStarIcon(bStars, rate, dStars);
 					} else {
-						setStarIcon(rate, FILLEDSTAR);
 						rate+=1;
+						MyUtils.setStarIcon(bStars, rate, dStars);
 					}
+					System.out.println(rate);
 				}
 			});
 		}
@@ -386,11 +363,11 @@ public class BookSaver extends JFrame implements ActionListener{
 			int result = chooser.showOpenDialog(this);
 			if(result == JFileChooser.APPROVE_OPTION) {
 				fImg = chooser.getSelectedFile();
-				lblBookImg.setIcon(new ImageIcon(MyUtils.setImgSize(fImg.getAbsolutePath(),dImg)));
+				MyUtils.setImgSize(lblBookImg, fImg, dImg);
 			}
 		}
 		if (obj == bDelImg) {
-			lblBookImg.setIcon(new ImageIcon(MyUtils.setImgSize(fDefault.getAbsolutePath(),dImg)));
+			MyUtils.setImgSize(lblBookImg, fDefault, dImg);
 //			fImg.delete();
 		}
 		//읽은책, 읽고있는책 탭처리 

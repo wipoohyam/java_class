@@ -1,5 +1,6 @@
 package kr.ac.green;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -11,12 +12,16 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.border.LineBorder;
 
 abstract class MyUtils {
 
 	public static final int EMPTYSTAR = 0;
 	public static final int HALFSTAR = 1;
 	public static final int FILLEDSTAR = 2;
+	
+	public static final int DEFAULTBTN = 0;
+	public static final int CONFIRMBTN = 1;
 	
 	public static void setImgSize(Component c, File imgFile, Dimension d) {
 		double dWidth = d.getWidth();
@@ -53,6 +58,7 @@ abstract class MyUtils {
 			b.setIcon(new ImageIcon(newImg));
 		}
 	}
+	
 
 	public static void setStarIcon(Component[] bStars, double rate, Dimension dStars) {
 		boolean isHalf = false;
@@ -91,5 +97,18 @@ abstract class MyUtils {
 		//기본폰트 
 		Font defaultFont = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
 		c.setFont(defaultFont);
+	}
+	public static void setMyButton(JButton btn, int btnType) {
+		btn.setContentAreaFilled(false);
+		btn.setOpaque(true);
+		btn.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
+		btn.setBackground(Color.WHITE);
+		if(btnType == DEFAULTBTN) {
+			btn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+			btn.setPreferredSize(new Dimension(70,26));
+		}else if(btnType == CONFIRMBTN) {
+			btn.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
+			btn.setPreferredSize(new Dimension(100,36));
+		}
 	}
 }

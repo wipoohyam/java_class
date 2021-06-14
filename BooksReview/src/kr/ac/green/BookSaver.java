@@ -12,14 +12,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
@@ -80,6 +84,13 @@ public class BookSaver extends JFrame implements ActionListener{
 	
 	public BookSaver() {
 		init();
+		setDisplay();
+		addListeners();
+		showFrame();
+	}
+	public BookSaver(Book book) {
+		init();
+		loadBook(book);
 		setDisplay();
 		addListeners();
 		showFrame();
@@ -186,6 +197,20 @@ public class BookSaver extends JFrame implements ActionListener{
 		bCancel = new JButton("취소");
 		
 	}
+	private void loadBook(Book book) {
+		if(book.getCover() != null) {
+			MyUtils.setImgSize(lblBookImg, book.getCover(), dImg);
+		}
+		tfBookTitle.setText(book.getTitle());
+		tfBookAuthor.setText(book.getAuthor());
+		tfBookCompany.setText(book.getCompany());
+		tfBookPages.setText(book.getPages());
+		tfDateFrom.setText(book.getDateFrom());
+		tfDateTo.setText(book.getDateTo());
+		rate = book.getRate();
+		MyUtils.setStarIcon(bStars, rate, dStars);
+		
+	}
 	private JLabel makeTfLabel(String txt) {
 		JLabel lbl = new JLabel(txt);
 		MyUtils.setDefaultFont(lbl);
@@ -219,6 +244,8 @@ public class BookSaver extends JFrame implements ActionListener{
 		pnlCenter.add(lblBookImg, BorderLayout.CENTER);
 		pnlCenter.setBorder(new EmptyBorder(0,0,10,10));
 		JPanel pnlImgBtns = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		MyUtils.setMyButton(bAddImg, MyUtils.DEFAULTBTN);
+		MyUtils.setMyButton(bDelImg, MyUtils.DEFAULTBTN);
 		pnlImgBtns.add(bAddImg);
 		pnlImgBtns.add(bDelImg);
 		pnlCenter.add(pnlImgBtns, BorderLayout.SOUTH);
@@ -292,6 +319,8 @@ public class BookSaver extends JFrame implements ActionListener{
 		
 		//저장,취소 버튼 
 		JPanel pnlBtns = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		MyUtils.setMyButton(bConfirm, MyUtils.CONFIRMBTN);
+		MyUtils.setMyButton(bCancel, MyUtils.CONFIRMBTN);
 		pnlBtns.add(bConfirm);
 		pnlBtns.add(bCancel);
 		
@@ -319,6 +348,9 @@ public class BookSaver extends JFrame implements ActionListener{
 		//읽은기간 버튼 이벤트리스너 
 		bRead.addActionListener(this);
 		bReading.addActionListener(this);
+		//저장,취소 버튼 
+		bConfirm.addActionListener(this);
+		bCancel.addActionListener(this);
 		//평점 입력 버튼 이벤트리스너 
 		for(int i=0;i<5;i++) {
 			bStars[i].addMouseListener(new MouseAdapter() {
@@ -335,7 +367,6 @@ public class BookSaver extends JFrame implements ActionListener{
 						rate+=1;
 						MyUtils.setStarIcon(bStars, rate, dStars);
 					}
-					System.out.println(rate);
 				}
 			});
 		}
@@ -352,6 +383,16 @@ public class BookSaver extends JFrame implements ActionListener{
 				pick = DATETO;
 				p = new Point(me.getXOnScreen(),me.getYOnScreen()+10);
 				new DatePicker(BookSaver.this, cal,true);
+			}
+		});
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent we) {
+				int result = JOptionPane.showConfirmDialog(BookSaver.this, "작성을 취소하시겠습니까?", "작성 취소",
+						JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+				if (result == JOptionPane.YES_OPTION) {
+					dispose();
+				}
 			}
 		});
 	}
@@ -378,7 +419,41 @@ public class BookSaver extends JFrame implements ActionListener{
 			selected.setActionCommand("selected");
 			setTabButton();
 		}
-		
+		//닫기버튼
+		if(obj == bCancel) {
+			int result = JOptionPane.showConfirmDialog(this, "작성을 취소하시겠습니까?","작성 취소",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if(result == JOptionPane.YES_OPTION) {
+				dispose();
+				new BookList();
+			}
+		}
+		//저장버튼 
+		if(obj == bConfirm) {
+			int result = JOptionPane.showConfirmDialog(BookSaver.this, "입력한 내용을 저장하시겠습니까?", "책 저장",
+					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if (result == JOptionPane.YES_OPTION) {
+				saveBook();
+				dispose();
+				new BookList();
+			}
+		}
+	}
+	private void saveBook() {
+		Book newBook = new Book(
+			fImg,
+			tfBookTitle.getText(),
+			tfBookAuthor.getText(),
+			tfBookCompany.getText(),
+			tfBookPages.getText(),
+			tfDateFrom.getText(),
+			tfDateTo.getText(),
+			rate
+		);
+		//벡터에 추가 
+		Vector<Book> temp = BookList.loadBooks();
+		temp.add(newBook);
+		//파일로 저장 
+		BookList.saveBooks(temp);
 	}
 	private void setCursorHand(Component c) {
 		c.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));

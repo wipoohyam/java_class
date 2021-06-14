@@ -10,11 +10,14 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -61,7 +64,9 @@ public class ReviewViewer extends JFrame implements ActionListener {
 	private JButton bCloseWindow;
 	private JButton bDeleteAll;
 	
-	public ReviewViewer(){
+	private Book book;
+	public ReviewViewer(Book book){
+		this.book = book;
 		init();
 		setDisplay();
 		addListeners();
@@ -79,41 +84,63 @@ public class ReviewViewer extends JFrame implements ActionListener {
 		lblBookImg = new JLabel();
 		lblBookImg.setPreferredSize(dImg);
 		fDefault = new File("img/needBookImg.jpg");
-		File fTest = new File("img/kids.jpg");
-//		lblBookImg.setIcon(new ImageIcon(MyUtils.setImgSize(fTest.getAbsolutePath(), dImg)));
-		MyUtils.setImgSize(lblBookImg, fTest, dImg);
+		if(book.getCover() != null) {
+			MyUtils.setImgSize(lblBookImg, book.getCover(), dImg);
+		}else {
+			MyUtils.setImgSize(lblBookImg, fDefault, dImg);
+		}
 		Dimension dText = new Dimension(100, 20);
 		lblBookTitle = new JLabel("제목");
 		lblBookTitleText = new JLabel(NOTEXT);
+		if(!book.getTitle().equals("")) {
+			lblBookTitleText.setText(book.getTitle());
+		}
 		lblBookTitleText.setPreferredSize(dText);
 		lblBookAuthor = new JLabel("저자");
 		lblBookAuthorText = new JLabel(NOTEXT);
+		if(!book.getAuthor().equals("")) {
+			lblBookAuthorText.setText(book.getAuthor());
+		}
 		lblBookAuthorText.setPreferredSize(dText);
 		lblBookCompany = new JLabel("출판사");
 		lblBookCompanyText = new JLabel(NOTEXT);
+		if(!book.getCompany().equals("")) {
+			lblBookCompanyText.setText(book.getCompany());
+		}
 		lblBookCompanyText.setPreferredSize(dText);
 		lblBookPages = new JLabel("페이지");
 		lblBookPagesText = new JLabel(NOTEXT);
+		if(!book.getPages().equals("")) {
+			lblBookPagesText.setText(book.getPages());
+		}
 		lblBookPagesText.setPreferredSize(dText);
 		
 		lblPeriod = new JLabel("읽은 기간", JLabel.CENTER);
 		lblPeriod.setVerticalAlignment(JLabel.BOTTOM);
 		lblPeriodFrom = new JLabel(NOTEXT);
+		if(!book.getDateFrom().equals("")) {
+			lblPeriodFrom.setText(book.getDateFrom());
+		}
 		lblWave = new JLabel("~");
 		lblPeriodTo = new JLabel(NOTEXT);
+		if(!book.getDateTo().equals("")) {
+			lblPeriodTo.setText(book.getDateTo());
+		}
 		
 		lblRate = new JLabel("내 평점", JLabel.CENTER);
 		lblRate.setVerticalAlignment(JLabel.BOTTOM);
 		dStars = new Dimension(18,18);
-		rate = 0;
+		if(book.getRate() != -1) {
+			rate = book.getRate();
+		}
 		lblStars = new JLabel[5];
 		for(int i=0;i<5;i++) {
 			lblStars[i] = new JLabel();
 		}
-		MyUtils.setStarIcon(lblStars, 3.5, dStars);
+		MyUtils.setStarIcon(lblStars, book.getRate(), dStars);
 		
 		bEditBook = new JButton("수정");
-		bEditBook.setVerticalAlignment(JButton.BOTTOM);
+		bEditBook.setVerticalAlignment(JButton.CENTER);
 		
 		//east
 		dReview = new Dimension(440,540);
@@ -167,7 +194,6 @@ public class ReviewViewer extends JFrame implements ActionListener {
 		
 		JPanel pnlBookInfoSouth = new JPanel(new GridLayout(4,1));
 		pnlBookInfoSouth.setPreferredSize(new Dimension(220, 220));
-		pnlBookInfoSouth.setBorder(new EmptyBorder(20,0,0,0));
 		JPanel pnlBookInfoPeriod = new JPanel(new GridLayout(2,1));
 		JPanel pnlBookInfoRate = new JPanel(new GridLayout(2,1));
 		JPanel pnlPeriodLine = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -186,8 +212,9 @@ public class ReviewViewer extends JFrame implements ActionListener {
 		
 		
 		JPanel pnlEditBookBtn = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		MyUtils.setMyButton(bEditBook, MyUtils.DEFAULTBTN);
 		pnlEditBookBtn.add(bEditBook);
-		pnlEditBookBtn.setBorder(new EmptyBorder(20,0,0,0));
+		pnlEditBookBtn.setBorder(new EmptyBorder(10,0,0,0));
 		
 		pnlBookInfoSouth.add(pnlBookInfoPeriod);
 		pnlBookInfoSouth.add(pnlBookInfoRate);
@@ -204,12 +231,16 @@ public class ReviewViewer extends JFrame implements ActionListener {
 		pnlEast.add(new JScrollPane(taReview, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
 				ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED), BorderLayout.CENTER);
 		JPanel pnlReviewBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		MyUtils.setMyButton(bEditReview, MyUtils.DEFAULTBTN);
+		MyUtils.setMyButton(bDelReview, MyUtils.DEFAULTBTN);
 		pnlReviewBtns.add(bEditReview);
 		pnlReviewBtns.add(bDelReview);
 		pnlEast.add(pnlReviewBtns, BorderLayout.SOUTH);
 		
 		//south
 		JPanel pnlSouth = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		MyUtils.setMyButton(bCloseWindow, MyUtils.CONFIRMBTN);
+		MyUtils.setMyButton(bDeleteAll, MyUtils.CONFIRMBTN);
 		pnlSouth.add(bCloseWindow);
 		pnlSouth.add(bDeleteAll);
 		
@@ -223,25 +254,30 @@ public class ReviewViewer extends JFrame implements ActionListener {
 	}
 	private void addListeners() {
 		bEditBook.addActionListener(this);
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent we) {
+				dispose();
+			}
+		});
+		bCloseWindow.addActionListener(this);
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
 		if(o == bEditBook) {
-			new BookSaver();
+			new BookSaver(book);
+		}
+		if(o == bCloseWindow) {
+			dispose();
 		}
 	}
 	private void showFrame() {
-		setTitle("책 제목"+" "+"후기");
+		setTitle(book.getTitle()+" "+"후기");
 		pack();
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		setVisible(true);
 		
-	}
-	
-	public static void main(String[] args) {
-		ReviewViewer r = new ReviewViewer();
-		System.out.println(r.getWidth()+","+r.getHeight());
 	}
 }

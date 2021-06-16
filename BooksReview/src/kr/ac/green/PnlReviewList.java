@@ -6,21 +6,18 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
-public class PnlReviewList extends JPanel implements ActionListener {
+public class PnlReviewList extends JPanel {
 	private JLabel lblPhoto;		//책 이미지
 	private Dimension dPhoto;
 	private File fDefault;
@@ -31,6 +28,7 @@ public class PnlReviewList extends JPanel implements ActionListener {
 	private JLabel[] lblStars;
 	private Dimension dStars;
 	
+	private JButton btnOpen;	//보기
 	private JButton btnModify;	//수정
 	private JButton btnDelete;	//삭제
 	
@@ -41,7 +39,6 @@ public class PnlReviewList extends JPanel implements ActionListener {
 		this.book = book;
 		init();
 		setDisplay();
-		addListeners();
 	}
 	
 	public void init() {
@@ -68,10 +65,12 @@ public class PnlReviewList extends JPanel implements ActionListener {
 		lblReview = new JTextArea(4,25);
 		lblReview.setText(book.getReview());
 		lblReview.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 16));
-		lblReview.setBorder(new EmptyBorder(0,0,0,0));
+		lblReview.setBorder(new EmptyBorder(5,5,5,5));
 		lblReview.setEditable(false);
 		lblReview.setCaretColor(Color.WHITE);
 		lblReview.setLineWrap(true);
+		lblReview.setPreferredSize(new Dimension(350, 60));
+		
 		//별점 들어갈 부분
 		pnlReviewPoint = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		dStars = new Dimension(12,12);
@@ -81,17 +80,17 @@ public class PnlReviewList extends JPanel implements ActionListener {
 		}
 		MyUtils.setStarIcon(lblStars, book.getRate(), dStars);
 		
+		btnOpen = new JButton("보기");
 		btnModify = new JButton("수정");
 		btnDelete = new JButton("삭제");
 		btnDelete.setActionCommand(book.getTitle());
 	}
 	
 	public void setDisplay() {
-		
+		setBorder(new EmptyBorder(0,0,0,0));
 		JPanel pnlMain = new JPanel(new BorderLayout());
 //		pnlMain.setPreferredSize(new Dimension(500,160));
 		pnlMain.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
-		
 		JPanel pnlWest = new JPanel();
 		pnlWest.add(lblPhoto);
 		
@@ -125,13 +124,16 @@ public class PnlReviewList extends JPanel implements ActionListener {
 		pnlENorth.setBorder(new EmptyBorder(0,0,5,0));
 		
 		JPanel pnlECenter = new JPanel(new BorderLayout());
-		JScrollPane spReview = new JScrollPane(lblReview);
-		spReview.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-		spReview.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
-		pnlECenter.add(spReview, BorderLayout.CENTER);
+//		JScrollPane spReview = new JScrollPane(lblReview);
+//		spReview.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+//		spReview.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
+		pnlECenter.add(lblReview, BorderLayout.CENTER);
+		pnlECenter.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
 		JPanel pnlESouth = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		MyUtils.setMyButton(btnOpen, MyUtils.DEFAULTBTN);
 		MyUtils.setMyButton(btnModify, MyUtils.DEFAULTBTN);
 		MyUtils.setMyButton(btnDelete, MyUtils.DEFAULTBTN);
+		pnlESouth.add(btnOpen);
 		pnlESouth.add(btnModify);
 		pnlESouth.add(btnDelete);
 		
@@ -141,28 +143,24 @@ public class PnlReviewList extends JPanel implements ActionListener {
 		
 		pnlMain.add(pnlWest, BorderLayout.WEST);
 		pnlMain.add(pnlEast, BorderLayout.EAST);
-		
+
+		pnlMain.setOpaque(true);
+		pnlMain.setBackground(Color.RED);
 		add(pnlMain, BorderLayout.CENTER);
 	}
-	private void addListeners() {
-		btnModify.addActionListener(this);
-		btnDelete.addActionListener(this);
+	public JButton getBtnOpen() {
+		return btnOpen;
 	}
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		Object o = e.getSource();
-		if(o == btnModify) {
-			new Review(book);
-		}
-		if(o == btnDelete) {
-			
-		}
-	}
-
 	public JButton getBtnDelete() {
 		return btnDelete;
 	}
+	public JButton getBtnModify() {
+		return btnModify;
+	}
 	public Book getBook() {
 		return book;
+	}
+	public JTextArea getLblReview() {
+		return lblReview;
 	}
 }

@@ -65,16 +65,22 @@ abstract class MyUtils {
 		File fFilled = new File("img/star_filled.png");
 		File fHalf = new File("img/star_half.png");
 		File fEmpty = new File("img/star_empty.png");
-		int idx = (int) rate;
-		double half = rate - idx;
+		int idx = (int) Math.ceil(rate);
+		double half = rate%1;
 		if(half==0.5) {
 			isHalf = true;
+			idx--;
 		}
-		if(idx<=-1) {
-			for(int i = 0; i<5; i++) {
-				setImgSize(bStars[i], fEmpty, dStars);
-			}
-		}else {
+//		idx는 0~4까지 나와야됨
+//		rate는 0.5~5이므로 (int) Math.ceil(rate) 는 1~5가 된다.
+//		rate 0.5,1 -> idx 1 
+//		rate 2.5,3 -> idx 3 --> 2.5, 3일때 idx 0,1=filled,  idx 2=half or filled
+		
+		
+		for(int i = 0; i<5; i++) {
+			setImgSize(bStars[i], fEmpty, dStars);
+		}
+		if(idx>-1){
 			for(int i = 0; i<idx; i++) {
 				setImgSize(bStars[i], fFilled, dStars);
 			}

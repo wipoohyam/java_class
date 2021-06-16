@@ -6,17 +6,13 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
-public class PnlBook extends JPanel implements ActionListener{
+public class PnlBook extends JPanel {
 	private JButton btnReview;	//후기 버튼
 	private JLabel lblBookTitle;
 	private Book book;
@@ -24,7 +20,6 @@ public class PnlBook extends JPanel implements ActionListener{
 		this.book = book;
 		init();
 		setDisplay();
-		addListeners();
 	}
 	
 	public void init() {
@@ -53,21 +48,11 @@ public class PnlBook extends JPanel implements ActionListener{
 		
 		add(pnlCenter, BorderLayout.CENTER);
 	}
-	private void addListeners() {
-		btnReview.addActionListener(this);
-		addMouseListener(new MouseAdapter() {
-			public void mousePressed(MouseEvent me) {
-				new ReviewViewer(book);
-			}
-		});
+	public JButton getBtnReview() {
+		return btnReview;
 	}
-	
-	@Override
-	public void actionPerformed(ActionEvent ae) {
-		Object o = ae.getSource();
-		if(o == btnReview) {
-			new Review(book);
-		}
+	public Book getBook() {
+		return book;
 	}
 
 }

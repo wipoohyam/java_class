@@ -1,6 +1,7 @@
 package kr.ac.green;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -10,18 +11,21 @@ import java.awt.event.WindowEvent;
 import java.util.Vector;
 
 import javax.swing.JButton;
-import javax.swing.JFrame;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
-public class ReviewList extends JFrame implements ActionListener{
+public class ReviewList extends JDialog implements ActionListener{
 	private PnlReviewList[] pnlReviewList;	//후기 패널
 	private JPanel pnlCenterMain;
+	private JScrollPane scroll;
 	private JButton btnBack;				//종료 버튼
 	private Vector<Book> books;
-	public ReviewList() {
+	private BookList owner;
+	public ReviewList(BookList owner, boolean modal) {
+		this.owner = owner;
 		init();
 		setDisplay();
 		addListeners();
@@ -29,7 +33,7 @@ public class ReviewList extends JFrame implements ActionListener{
 	}
 	
 	public void init() {
-		books = new BookList().getBooks();
+		books = BookList.loadBooks();
 		pnlReviewList = new PnlReviewList[books.size()];
 		for(int i=0; i<pnlReviewList.length; i++) {
 			pnlReviewList[i] = new PnlReviewList(books.get(i));
@@ -46,38 +50,12 @@ public class ReviewList extends JFrame implements ActionListener{
 		for(PnlReviewList list : pnlReviewList) {
 			pnlCenterMain.add(list);
 		}
-		/*
-		 * 그리드 때문에 패널 갯수 적어졌을 때 크기 변하지 않도록 여백
-		 */
-//		if(pnlReviewList.length < 7){
-//			JPanel pnlEx1 = new JPanel();
-//			pnlEx1.setBorder(new EmptyBorder(0,0,0,0));
-//			JPanel pnlEx2 = new JPanel();
-//			pnlEx2.setBorder(new EmptyBorder(0,0,0,0));
-//			JPanel pnlEx3 = new JPanel();
-//			pnlEx3.setBorder(new EmptyBorder(0,0,0,0));
-//			JPanel pnlEx4 = new JPanel();
-//			pnlEx4.setBorder(new EmptyBorder(0,0,0,0));
-//			JPanel pnlEx5 = new JPanel();
-//			pnlEx5.setBorder(new EmptyBorder(0,0,0,0));
-			
-//			pnlCenterMain.add(pnlEx1);
-//			pnlCenter.add(pnlEx2);
-//			pnlCenter.add(pnlEx3);
-//			pnlCenter.add(pnlEx4);
-//			pnlCenter.add(pnlEx5);
-//		}
 		
 		
-		JScrollPane scroll = new JScrollPane(pnlCenterMain);
+		scroll = new JScrollPane(pnlCenterMain);
         
-        if(pnlReviewList.length < 4){
-            scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-        };
-
-		int count = pnlReviewList.length/ 9 + 4;	//스크롤바 속도
-		scroll.getVerticalScrollBar().setUnitIncrement(count);
-		
+		refreshList();
+        
 		pnlCenter.add(scroll);
         
 		JPanel pnlSouth = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -89,56 +67,89 @@ public class ReviewList extends JFrame implements ActionListener{
 		pnlMain.add(pnlSouth, BorderLayout.SOUTH);
 		add(pnlMain);
 	}
-	public void refreshReviewList() {
-		books = new BookList().getBooks();
-		pnlReviewList = new PnlReviewList[books.size()];
-		for(int i=0; i<pnlReviewList.length; i++) {
-			pnlReviewList[i] = new PnlReviewList(books.get(i));
-		}
-		pnlCenterMain.removeAll();
-		for(PnlReviewList list : pnlReviewList) {
-			pnlCenterMain.add(list);
-		}
-	}
 	private void addListeners() {
 		btnBack.addActionListener(this);
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent we) {
 				dispose();
-				new BookList();
+				owner.setEnabled(true);
+			}
+			@Override
+			public void windowActivated(WindowEvent we) {
+				refreshList();
 			}
 		});
 
 		for(int i = 0; i<pnlReviewList.length;i++) {
 			pnlReviewList[i].getBtnDelete().addActionListener(this);
+			pnlReviewList[i].getBtnModify().addActionListener(this);
+			pnlReviewList[i].getBtnOpen().addActionListener(this);
 		}
-		
-	}
-	public void refresh() {
-		pnlCenterMain.updateUI();
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
 		if(o == btnBack) {
 			dispose();
-			new BookList();
+			owner.setBooksShow();
+			owner.setEnabled(true);
 		}
 		if(o instanceof JButton && o != null) {
 			JButton btn = (JButton) o;
 			for(int i=0; i<pnlReviewList.length; i++) {
+				if(btn == pnlReviewList[i].getBtnModify()) {
+					new Review(ReviewList.this , pnlReviewList[i].getBook(), true);
+					this.setEnabled(false);
+				}
+				if(btn == pnlReviewList[i].getBtnOpen()) {
+					new ReviewViewer(ReviewList.this, pnlReviewList[i].getBook(),true);
+					this.setEnabled(false);
+				}
 				if(btn == pnlReviewList[i].getBtnDelete()) {
 					int result = JOptionPane.showConfirmDialog(this, "선택한 도서와 후기를 삭제하시겠습니까?","삭제",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 					if(result == JOptionPane.YES_OPTION) {
-						pnlCenterMain.remove(pnlReviewList[i]);
 						books.remove(pnlReviewList[i].getBook());
 						BookList.saveBooks(books);
-						pnlCenterMain.updateUI();
+						refreshList();
 					}
 				}
 			}
 		}
+	}
+
+	public void refreshList() {
+		
+		books = BookList.loadBooks();
+		pnlCenterMain.removeAll();
+		pnlReviewList = new PnlReviewList[books.size()];
+		for(int i=0;i<pnlReviewList.length;i++) {
+			pnlReviewList[i] = new PnlReviewList(books.get(i));
+		}
+		for(int i=0;i<pnlReviewList.length;i++) {
+			pnlCenterMain.add(pnlReviewList[i]);
+			pnlCenterMain.revalidate();
+			validate();
+		}
+		if (pnlReviewList.length<4) {
+			JPanel[] pnlBlank = new JPanel[3];
+			for(int i=0;i<3-pnlReviewList.length;i++) {
+				pnlBlank[i] = new JPanel();
+				pnlBlank[i].setPreferredSize(new Dimension(500,181));
+				pnlCenterMain.add(pnlBlank[i]);
+				pnlCenterMain.revalidate();
+				validate();
+			}
+		}
+		if(pnlReviewList.length < 3){
+            scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        }else {
+        	scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        }
+		int count = pnlReviewList.length/ 9 + 4;	//스크롤바 속도
+		scroll.getVerticalScrollBar().setUnitIncrement(count);
+		scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		addListeners();
 	}
 	public void showFrame() {
 		setTitle("Review List");
@@ -147,7 +158,6 @@ public class ReviewList extends JFrame implements ActionListener{
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		setResizable(false);
 		setVisible(true);
-		
 	}
 	
 }

@@ -31,15 +31,19 @@ public class DatePicker extends JDialog implements ActionListener{
 	private BookSaver owner;
 	public DatePicker(BookSaver owner,Calendar cal, boolean modal) {
 		this.owner = owner;
-		Dimension dMoveBtns = new Dimension(36,24);
-		btnPreYear = new JButton("<<");
+		Dimension dMoveBtns = new Dimension(50,28);
+		btnPreYear = new JButton("《 작년");
+		MyUtils.setMyButton(btnPreYear, 0);
 		btnPreYear.setPreferredSize(dMoveBtns);
-		btnNextYear = new JButton(">>");
+		btnNextYear = new JButton("내년 》");
+		MyUtils.setMyButton(btnNextYear, 0);
 		btnNextYear.setPreferredSize(dMoveBtns);
 		
-		btnPreMonth = new JButton("<");
+		btnPreMonth = new JButton("〈	 전월");
+		MyUtils.setMyButton(btnPreMonth, 0);
 		btnPreMonth.setPreferredSize(dMoveBtns);
-		btnNextMonth = new JButton(">");
+		btnNextMonth = new JButton("내월 〉");
+		MyUtils.setMyButton(btnNextMonth, 0);
 		btnNextMonth.setPreferredSize(dMoveBtns);
 		
 		

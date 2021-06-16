@@ -9,17 +9,22 @@ public class Book implements Serializable{
 	private String author;
 	private String company;
 	private String pages;
+	private boolean read;
 	private String dateFrom;
 	private String dateTo;
 	private double rate;
 	
-	private String review;
+	private String review = "";
 
-	public Book() {
-		
+	public Book(String title) {
+		this.title = title;
+	}
+	public Book(String title, String author) {
+		this.title = title;
+		this.author = author;
 	}
 
-	public Book(File cover, String title, String author, String company, String pages, String dateFrom, String dateTo,
+	public Book(File cover, String title, String author, String company, String pages, boolean read, String dateFrom, String dateTo,
 			double rate) {
 		super();
 		this.cover = cover;
@@ -27,6 +32,7 @@ public class Book implements Serializable{
 		this.author = author;
 		this.company = company;
 		this.pages = pages;
+		this.read = read;
 		this.dateFrom = dateFrom;
 		this.dateTo = dateTo;
 		this.rate = rate;
@@ -71,7 +77,12 @@ public class Book implements Serializable{
 	public void setPages(String pages) {
 		this.pages = pages;
 	}
-
+	public boolean getRead() {
+		return read;
+	}
+	public void setRead(boolean read) {
+		this.read = read;
+	}
 	public String getDateFrom() {
 		return dateFrom;
 	}
@@ -109,6 +120,22 @@ public class Book implements Serializable{
 		return "Book [cover=" + cover + ", title=" + title + ", author=" + author + ", company=" + company + ", pages="
 				+ pages + ", dateFrom=" + dateFrom + ", dateTo=" + dateTo + ", rate=" + rate + ", review=" + review
 				+ "]";
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		boolean flag = false;
+		if(o == null || !(o instanceof Book)) {
+			return false;
+		}
+		Book book = (Book)o;
+		if(title.equals(book.getTitle()) && author.equals(book.getAuthor())) {
+			flag = true;
+		}
+//		else if(title.equals(book.getTitle())) {
+//			flag = true;
+//		}
+		return flag;
 	}
 	
 	

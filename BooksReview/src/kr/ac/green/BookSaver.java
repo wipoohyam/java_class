@@ -6,12 +6,14 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -20,8 +22,8 @@ import java.util.Calendar;
 import java.util.Vector;
 
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -30,7 +32,7 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
 
-public class BookSaver extends JFrame implements ActionListener{
+public class BookSaver extends JDialog implements ActionListener{
 	
 	//책이미지 크기 
 	private Dimension dImg;
@@ -59,6 +61,7 @@ public class BookSaver extends JFrame implements ActionListener{
 	private Dimension dRead;
 	private JButton bRead;
 	private JButton bReading;
+	private boolean read;
 	private Color selectedBg;
 	private Color unselectedBg;
 	
@@ -78,20 +81,26 @@ public class BookSaver extends JFrame implements ActionListener{
 	private Dimension dStars;
 	private JButton[] bStars;
 	private double rate;
+	private String review;
 	
 	private JButton bConfirm;
 	private JButton bCancel;
 	
-	public BookSaver() {
+	private BookList blOwner;
+	private ReviewViewer rvOwner;
+	public BookSaver(BookList owner, boolean modal) {
+		this.blOwner = owner;
 		init();
 		setDisplay();
 		addListeners();
 		showFrame();
 	}
-	public BookSaver(Book book) {
+	public BookSaver(ReviewViewer owner, Book book, boolean modal) {
+		this.rvOwner = owner;
 		init();
 		loadBook(book);
 		setDisplay();
+		setDateButton(read);
 		addListeners();
 		showFrame();
 	}
@@ -101,7 +110,9 @@ public class BookSaver extends JFrame implements ActionListener{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 		fDefault = new File("img/needBookImg.jpg");
+		fImg = fDefault;
 		dImg = new Dimension(310, 450);
 		lblBookImg = new JLabel("");
 		lblBookImg.setPreferredSize(dImg);
@@ -135,7 +146,7 @@ public class BookSaver extends JFrame implements ActionListener{
 		lblBookTitle = makeTfLabel("제목");
 		lblBookAuthor = makeTfLabel("저자");
 		lblBookCompany = makeTfLabel("출판사");
-		lblBookPages = makeTfLabel("페이지수");
+		lblBookPages = makeTfLabel("총 페이지수");
 		
 		tfBookTitle = makeTf(15);
 		tfBookAuthor = makeTf(15);
@@ -147,6 +158,7 @@ public class BookSaver extends JFrame implements ActionListener{
 		unselectedBg = new Color(170,170,170);
 		bRead = new JButton("읽은책");
 		bRead.setActionCommand("selected");
+		read = true;
 		bRead.setPreferredSize(dRead);
 		bRead.setBorderPainted(false);
 		bRead.setOpaque(true);
@@ -189,9 +201,7 @@ public class BookSaver extends JFrame implements ActionListener{
 			bStars[i].setActionCommand(String.valueOf(i));
 			setCursorHand(bStars[i]);
 		}
-		rate = -1;
 		MyUtils.setStarIcon(bStars, rate, dStars);
-		
 		
 		bConfirm = new JButton("저장");
 		bCancel = new JButton("취소");
@@ -199,22 +209,24 @@ public class BookSaver extends JFrame implements ActionListener{
 	}
 	private void loadBook(Book book) {
 		if(book.getCover() != null) {
+			fImg = book.getCover();
 			MyUtils.setImgSize(lblBookImg, book.getCover(), dImg);
 		}
 		tfBookTitle.setText(book.getTitle());
 		tfBookAuthor.setText(book.getAuthor());
 		tfBookCompany.setText(book.getCompany());
 		tfBookPages.setText(book.getPages());
+		read = book.getRead();
 		tfDateFrom.setText(book.getDateFrom());
 		tfDateTo.setText(book.getDateTo());
 		rate = book.getRate();
+		review = book.getReview();
 		MyUtils.setStarIcon(bStars, rate, dStars);
 		
 	}
 	private JLabel makeTfLabel(String txt) {
 		JLabel lbl = new JLabel(txt);
 		MyUtils.setDefaultFont(lbl);
-		lbl.setBorder(new EmptyBorder(0,5,5,0));
 		return lbl;
 	}
 	private JTextField makeTf(int length) {
@@ -223,6 +235,12 @@ public class BookSaver extends JFrame implements ActionListener{
 		tf.setOpaque(true);
 		tf.setBackground(Color.WHITE);
 		return tf;
+	}
+	private JLabel redStar() {
+		JLabel star = new JLabel("*");
+		star.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+		star.setForeground(Color.RED);
+		return star;
 	}
 	private void setTabButton() {
 		if(bRead.getActionCommand().equals("selected")) {
@@ -259,12 +277,18 @@ public class BookSaver extends JFrame implements ActionListener{
 		
 		EmptyBorder eb10b = new EmptyBorder(0,0,10,0);
 		JPanel pnlTitle = new JPanel(new BorderLayout());
-		pnlTitle.add(lblBookTitle, BorderLayout.CENTER);
+		JPanel pnlTitleText = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		pnlTitleText.add(lblBookTitle);
+		pnlTitleText.add(redStar());
+		pnlTitle.add(pnlTitleText, BorderLayout.CENTER);
 		pnlTitle.add(tfBookTitle, BorderLayout.SOUTH);
 		pnlTitle.setBorder(eb10b);
 		
 		JPanel pnlAuthor = new JPanel(new BorderLayout());
-		pnlAuthor.add(lblBookAuthor, BorderLayout.CENTER);
+		JPanel pnlAuthorText = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		pnlAuthorText.add(lblBookAuthor);
+		pnlAuthorText.add(redStar());
+		pnlAuthor.add(pnlAuthorText, BorderLayout.CENTER);
 		pnlAuthor.add(tfBookAuthor, BorderLayout.SOUTH);
 		pnlAuthor.setBorder(eb10b);
 		
@@ -355,17 +379,19 @@ public class BookSaver extends JFrame implements ActionListener{
 		for(int i=0;i<5;i++) {
 			bStars[i].addMouseListener(new MouseAdapter() {
 				public void mousePressed(MouseEvent me) {
-					JButton selected = (JButton) me.getSource();
-					rate = Integer.parseInt(selected.getActionCommand());
-					Dimension d = dStars;
-					double w = d.getWidth();
-					double clickedX = me.getX();
-					if ((clickedX < (w / 2))) {
-						rate+=0.5;
-						MyUtils.setStarIcon(bStars, rate, dStars);
-					} else {
-						rate+=1;
-						MyUtils.setStarIcon(bStars, rate, dStars);
+					if(me.getButton() == MouseEvent.BUTTON1) {
+						JButton selected = (JButton) me.getSource();
+						rate = Integer.parseInt(selected.getActionCommand());
+						Dimension d = dStars;
+						double w = d.getWidth();
+						double clickedX = me.getX();
+						if ((clickedX < (w / 2))) {
+							rate+=0.5;
+							MyUtils.setStarIcon(bStars, rate, dStars);
+						} else {
+							rate+=1;
+							MyUtils.setStarIcon(bStars, rate, dStars);
+						}
 					}
 				}
 			});
@@ -373,29 +399,26 @@ public class BookSaver extends JFrame implements ActionListener{
 //		날짜입력버튼 이벤트 리스너 
 		tfDateFrom.addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent me) {
-				pick = DATEFROM;
-				p = new Point(me.getXOnScreen(),me.getYOnScreen()+10);
-				new DatePicker(BookSaver.this, cal,true);
-			}
-		});
-		tfDateTo.addMouseListener(new MouseAdapter() {
-			public void mousePressed(MouseEvent me) {
-				pick = DATETO;
-				p = new Point(me.getXOnScreen(),me.getYOnScreen()+10);
-				new DatePicker(BookSaver.this, cal,true);
+				if(me.getButton() == MouseEvent.BUTTON1) {
+					pick = DATEFROM;
+					p = new Point(me.getXOnScreen(),me.getYOnScreen()+10);
+					new DatePicker(BookSaver.this, cal,true);
+				}
 			}
 		});
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent we) {
 				int result = JOptionPane.showConfirmDialog(BookSaver.this, "작성을 취소하시겠습니까?", "작성 취소",
-						JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 				if (result == JOptionPane.YES_OPTION) {
 					dispose();
+					setOwnersEnabled();
 				}
 			}
 		});
 	}
+	
 	@Override
 	public void actionPerformed(ActionEvent ae) {
 		Object obj = ae.getSource();
@@ -409,33 +432,81 @@ public class BookSaver extends JFrame implements ActionListener{
 		}
 		if (obj == bDelImg) {
 			MyUtils.setImgSize(lblBookImg, fDefault, dImg);
-//			fImg.delete();
+			fImg = fDefault;
 		}
 		//읽은책, 읽고있는책 탭처리 
-		if(obj == bRead || obj == bReading) {
-			bRead.setActionCommand("");
-			bReading.setActionCommand("");
-			JButton selected = (JButton) obj;
-			selected.setActionCommand("selected");
-			setTabButton();
+		if( obj == bRead || obj ==bReading) {
+			boolean flag = true;
+			if(obj == bReading) {
+				flag = false;
+			}
+			read = flag;
+			setDateButton(flag);
 		}
 		//닫기버튼
 		if(obj == bCancel) {
 			int result = JOptionPane.showConfirmDialog(this, "작성을 취소하시겠습니까?","작성 취소",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if(result == JOptionPane.YES_OPTION) {
 				dispose();
-				new BookList();
+				setOwnersEnabled();
 			}
 		}
-		//저장버튼 
-		if(obj == bConfirm) {
+		//새책 저장버튼 
+		if(obj == bConfirm && blOwner != null && checkInputsAllright()) {
 			int result = JOptionPane.showConfirmDialog(BookSaver.this, "입력한 내용을 저장하시겠습니까?", "책 저장",
 					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if (result == JOptionPane.YES_OPTION) {
 				saveBook();
+				blOwner.setBooksShow();
 				dispose();
-				new BookList();
+				blOwner.setEnabled(true);
 			}
+		}
+		//책수정 저장버튼
+		if(obj == bConfirm && rvOwner != null &&checkInputsAllright()) {
+			int result = JOptionPane.showConfirmDialog(BookSaver.this, "입력한 내용을 저장하시겠습니까?", "책 저장",
+					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if (result == JOptionPane.YES_OPTION) {
+				System.out.println(rate);
+				rvOwner.setTempBook(new Book(
+						fImg,
+						tfBookTitle.getText(),
+						tfBookAuthor.getText(),
+						tfBookCompany.getText(),
+						tfBookPages.getText(),
+						read,
+						tfDateFrom.getText(),
+						tfDateTo.getText(),
+						rate
+					));
+				rvOwner.getTempBook().getRate();
+				rvOwner.setBookInfo(rvOwner.getTempBook());
+				rvOwner.setTaReview(review);
+				dispose();
+				rvOwner.setEnabled(true);
+			}
+		}
+	}
+	private MouseListener dateTo = new MouseAdapter() {
+		public void mousePressed(MouseEvent me) {
+			if(me.getButton() == MouseEvent.BUTTON1) {
+				pick = DATETO;
+				p = new Point(me.getXOnScreen(),me.getYOnScreen()+10);
+				new DatePicker(BookSaver.this, cal,true);
+			}
+		}
+	};
+	private void tfDateToListener(boolean on) {
+		if(on) {
+			tfDateTo.addMouseListener(dateTo);
+			tfDateTo.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			tfDateTo.setBackground(Color.WHITE);
+			tfDateTo.setForeground(Color.BLACK);
+		}else {
+			tfDateTo.removeMouseListener(dateTo);
+			tfDateTo.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			tfDateTo.setBackground(new Color(0xCCCCCC));
+			tfDateTo.setForeground(Color.WHITE);
 		}
 	}
 	private void saveBook() {
@@ -445,6 +516,7 @@ public class BookSaver extends JFrame implements ActionListener{
 			tfBookAuthor.getText(),
 			tfBookCompany.getText(),
 			tfBookPages.getText(),
+			read,
 			tfDateFrom.getText(),
 			tfDateTo.getText(),
 			rate
@@ -455,8 +527,50 @@ public class BookSaver extends JFrame implements ActionListener{
 		//파일로 저장 
 		BookList.saveBooks(temp);
 	}
+	private void setDateButton(boolean btnRead) {
+		bReading.setActionCommand("");
+		bRead.setActionCommand("selected");
+		tfDateTo.setText(sdf.format(cal.getTime()));
+		tfDateToListener(true);
+		if(!read) {
+			bRead.setActionCommand("");
+			bReading.setActionCommand("selected");
+			tfDateTo.setText("");
+			tfDateToListener(false);
+		}
+		setTabButton();
+	}
 	private void setCursorHand(Component c) {
 		c.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+	}
+	private boolean checkInputsAllright() {
+		String textTitle = tfBookTitle.getText().trim();
+		String textAuthor = tfBookAuthor.getText().trim();
+		String textPages = tfBookPages.getText().trim();
+		try {
+			//페이지수 없는것 ok, 숫자 있는것 ok, 음수 X,텍스트 X
+			if(textPages.equals("")) {
+			}else if(Integer.valueOf(textPages) < 0) {
+				JOptionPane.showMessageDialog(this, "페이지수를 적절한 숫자로 입력해주세요.");
+				return false;
+			}
+		} catch(Exception e) {
+			JOptionPane.showMessageDialog(this, "페이지수는 숫자로만 입력해주세요.");
+			return false;
+		}
+		if(textTitle.length() == 0 || textAuthor.length() == 0) {
+			JOptionPane.showMessageDialog(this, "제목과 저자는 입력 필수항목입니다.");
+			return false;
+		}
+		return true;
+	}
+	private void setOwnersEnabled() {
+		try {
+			blOwner.setEnabled(true);
+		} catch(Exception e) {}
+		try {
+			rvOwner.setEnabled(true);
+		} catch(Exception e) {}
 	}
 	private void showFrame() {
 		setTitle("도서 관리");
@@ -465,9 +579,5 @@ public class BookSaver extends JFrame implements ActionListener{
 		setLocationRelativeTo(null);
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		setVisible(true);
-	}
-	
-	public static void main(String[] args) {
-		new BookSaver();
 	}
 }

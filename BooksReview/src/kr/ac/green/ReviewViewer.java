@@ -79,6 +79,7 @@ public class ReviewViewer extends JDialog implements ActionListener {
 	//책을 불러온다(book) 불러온 책은 저장하지 않을경우를 생각해 그대로 두고 
 	public ReviewViewer(BookList owner, Book book, boolean modal){
 		this.blOwner = owner;
+		setModal(modal);
 		this.book = book;
 		this.tempBook = book;
 		init();
@@ -90,6 +91,7 @@ public class ReviewViewer extends JDialog implements ActionListener {
 	
 	public ReviewViewer(ReviewList owner, Book book, boolean modal){
 		this.rlOwner = owner;
+		setModal(modal);
 		this.book = book;
 		this.tempBook = book;
 		init();
@@ -222,13 +224,13 @@ public class ReviewViewer extends JDialog implements ActionListener {
 		
 		JPanel pnlBookInfo = new JPanel(new BorderLayout());
 		JPanel pnlBookInfoLabel = new JPanel(new GridLayout(4,1));
-		pnlBookInfoLabel.setPreferredSize(new Dimension(60, 100));
-		pnlBookInfoText.setPreferredSize(new Dimension(160, 100));
+		pnlBookInfoLabel.setPreferredSize(new Dimension(70, 100));
+		pnlBookInfoText.setPreferredSize(new Dimension(150, 100));
 		pnlBookInfoLabel.add(lblBookTitle);
 		pnlBookInfoLabel.add(lblBookAuthor);
 		pnlBookInfoLabel.add(lblBookCompany);
 		pnlBookInfoLabel.add(lblBookPages);
-		pnlBookInfoLabel.setBorder(new EmptyBorder(0,10,0,10));
+		pnlBookInfoLabel.setBorder(new EmptyBorder(0,0,0,5));
 		pnlBookInfoText.add(lblBookTitleText);
 		pnlBookInfoText.add(lblBookAuthorText);
 		pnlBookInfoText.add(lblBookCompanyText);
@@ -330,7 +332,10 @@ public class ReviewViewer extends JDialog implements ActionListener {
 			@Override
 			public void windowClosing(WindowEvent we) {
 				dispose();
-				setOwnersEnabled();
+			}
+			@Override
+			public void windowActivated(WindowEvent we) {
+				toFront();
 			}
 		});
 		bSave.addActionListener(this);
@@ -344,7 +349,6 @@ public class ReviewViewer extends JDialog implements ActionListener {
 		Object o = e.getSource();
 		if(o == bEditBook) {
 			new BookSaver(ReviewViewer.this, tempBook, true);
-			this.setEnabled(false);
 		}
 		if(o == bCloseWindow) {
 			if(isChanged()) {
@@ -353,16 +357,13 @@ public class ReviewViewer extends JDialog implements ActionListener {
 				if (result == JOptionPane.YES_OPTION) {
 					setBookInfo(book);
 					dispose();
-					setOwnersEnabled();
 				}else {}
 			}else {
 				dispose();
-				setOwnersEnabled();
 			}
 		}
 		if(o == bEditReview) {
 			new Review(ReviewViewer.this, book, true);
-			this.setEnabled(false);
 		}
 		if(o== bDelReview) {
 			int result = JOptionPane.showConfirmDialog(ReviewViewer.this, "작성된 리뷰를 삭제하시겠습니까? 삭제된 리뷰는 저장 후에 반영됩니다.", "리뷰 삭제",
@@ -381,8 +382,8 @@ public class ReviewViewer extends JDialog implements ActionListener {
 				tempBook.setReview(getTaReview());
 				temp.set(idx, tempBook);
 				BookList.saveBooks(temp);
+				refreshOwner();
 				dispose();
-				setOwnersEnabled();
 			}else {}
 		}
 		if(o==bDeleteAll) {
@@ -392,19 +393,17 @@ public class ReviewViewer extends JDialog implements ActionListener {
 				Vector<Book> temp = BookList.loadBooks();
 				temp.remove(book);
 				BookList.saveBooks(temp);
+				refreshOwner();
 				dispose();
-				setOwnersEnabled();
 			}
 		}
 	}
-	private void setOwnersEnabled() {
-		try {
-			rlOwner.setEnabled(true);
-		} catch(Exception e) {}
-		try {
-			blOwner.setEnabled(true);
+	private void refreshOwner() {
+		if(blOwner != null) {
 			blOwner.setBooksShow();
-		} catch(Exception e) {}
+		}else if(rlOwner != null) {
+			rlOwner.refreshList();
+		}
 	}
 	public void setTaReview(String review) {
 		taReview.setText(review);

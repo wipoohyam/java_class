@@ -9,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -19,20 +21,24 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
 import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
 
-public class BookList extends JFrame implements ActionListener{
+public class BookList extends JFrame implements ActionListener, ItemListener{
 	private JComboBox cbSearchBy;
+	private String[] searchBy = {"제목", "저자", "읽은책", "읽고있는책"};
 	private JTextField tfSearch;	//검색창
 	private JButton btnSearch;		//검색 버튼
 	private JButton btnInitList;		//초기화 버튼
@@ -106,6 +112,15 @@ public class BookList extends JFrame implements ActionListener{
 		return books;
 	}
 	private void init() {
+		try {
+			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		cbSearchBy = new JComboBox<String>(searchBy);
+		cbSearchBy.addItemListener(this);
+		((JLabel)cbSearchBy.getRenderer()).setHorizontalAlignment(JLabel.CENTER);
+
 		tfSearch = new JTextField(15);
 		tfSearch.setText("검색어를 입력해주세요.");
 		tfSearch.setForeground(Color.GRAY);
@@ -124,13 +139,13 @@ public class BookList extends JFrame implements ActionListener{
 		        	tfSearch.setText("검색어를 입력해주세요.");
 		        }
 		    }
-		    });
+	    });
 		btnSearch = new JButton("검색");
 		btnInitList = new JButton("초기화");
-		btnSearch.requestFocus();
+		BookList.this.getRootPane().setDefaultButton(btnSearch);
 		books = loadBooks();
 //		pnlBook = new PnlBook[books.size()];
-		btnBook = new JButton("책 추가");
+		btnBook = new JButton("새책 추가");
 		btnReview = new JButton("후기 모아보기");
 		btnExit = new JButton("종료");
 	}
@@ -140,12 +155,13 @@ public class BookList extends JFrame implements ActionListener{
 		JPanel pnlNorth = new JPanel(new FlowLayout(FlowLayout.CENTER));
 		pnlNorth.setBorder(new EmptyBorder(15,0,5,0));
 		tfSearch.setBorder(new EmptyBorder(5,3,5,3));
+		pnlNorth.add(cbSearchBy);
 		pnlNorth.add(tfSearch);
 		MyUtils.setMyButton(btnSearch, MyUtils.DEFAULTBTN);
-		btnSearch.setPreferredSize(new Dimension(70,26));
+		btnSearch.setPreferredSize(new Dimension(60,26));
 		pnlNorth.add(btnSearch);
 		MyUtils.setMyButton(btnInitList, MyUtils.DEFAULTBTN);
-		btnInitList.setPreferredSize(new Dimension(70,26));
+		btnInitList.setPreferredSize(new Dimension(60,26));
 		pnlNorth.add(btnInitList);
 		
 		pnlCenter = new JPanel(new BorderLayout());
@@ -161,7 +177,7 @@ public class BookList extends JFrame implements ActionListener{
 		JPanel pnlSWest = new JPanel(new FlowLayout());
 		MyUtils.setMyButton(btnBook, MyUtils.DEFAULTBTN);
 		MyUtils.setMyButton(btnReview, MyUtils.DEFAULTBTN);
-		btnReview.setPreferredSize(new Dimension(90,26));
+		btnReview.setPreferredSize(new Dimension(110,26));
 		pnlSWest.add(btnBook);
 		pnlSWest.add(btnReview);
 		JPanel pnlSCenter = new JPanel();
@@ -208,6 +224,7 @@ public class BookList extends JFrame implements ActionListener{
 			}
 			@Override
 			public void windowActivated(WindowEvent we) {
+				toFront();
 				btnSearch.requestFocus();
 			}
 		});
@@ -220,10 +237,7 @@ public class BookList extends JFrame implements ActionListener{
 				public void mousePressed(MouseEvent me) {
 					PnlBook pb = (PnlBook) me.getSource();
 					if(me.getButton()== MouseEvent.BUTTON1) {
-						System.out.println(pb.getBook().getRate());
-						
 						new ReviewViewer(BookList.this, pb.getBook(), true);
-						BookList.this.setEnabled(false);
 					}
 				}
 			});
@@ -231,24 +245,56 @@ public class BookList extends JFrame implements ActionListener{
 		
 	}
 	@Override
+	public void itemStateChanged(ItemEvent e) {
+		JComboBox cb;
+		String selected ="";
+        pnlCenterMain.removeAll();
+		if (e.getSource() instanceof JComboBox && e.getSource() != null) {
+			cb = (JComboBox)e.getSource();
+			selected = cb.getSelectedItem().toString();
+		}
+		//검색결과 book들을 담을 Vector생성
+		Vector<Book> foundBooks = new Vector<>();
+		if(selected.equals("읽고있는책")) {
+			for(int i=0;i<books.size();i++) {
+				if(!books.get(i).getRead()) {
+					foundBooks.add(books.get(i));
+				}
+			}
+		}else if(selected.equals("읽은책")) {
+			for(int i=0;i<books.size();i++) {
+				if(books.get(i).getRead()) {
+					foundBooks.add(books.get(i));
+				}
+			}
+		}else if(selected.equals("제목") || selected.equals("저자")) {
+			foundBooks = loadBooks();
+		}
+		pnlBook = new PnlBook[foundBooks.size()];
+		if(foundBooks.size()>0) {
+			for (int i=0;i<foundBooks.size();i++) {
+				pnlBook[i] = new PnlBook(foundBooks.get(i));
+			}
+		}
+		setPnlBooksDisplay(pnlBook);
+		addPnlBookListener(pnlBook);
+	}
+	@Override
 	public void actionPerformed(ActionEvent ae) {
 		Object o = ae.getSource();
 		for(int i=0;i<pnlBook.length; i++) {
 			if(o == pnlBook[i].getBtnReview()) {
-				new Review(BookList.this, pnlBook[i].getBook(), true);
-				this.setEnabled(false);
-			}
-			if(o == pnlBook[i]) {
-				System.out.println(""+i);
+				Review rv = new Review(BookList.this, pnlBook[i].getBook(), true);
+				rv.toFront();
 			}
 		}
 		if(o == btnBook) {
-			new BookSaver(BookList.this, true);
-			this.setEnabled(false);
+			BookSaver sv = new BookSaver(BookList.this, true);
+			sv.toFront();
 		}
 		if(o == btnReview) {
-			new ReviewList(BookList.this, true);
-			this.setEnabled(false);
+			ReviewList rl = new ReviewList(BookList.this, true);
+			rl.toFront();
 		}
 		if(o == btnExit) {
 			int result = JOptionPane.showConfirmDialog(BookList.this, "종료하시겠습니까?", "프로그램 종료",
@@ -259,6 +305,11 @@ public class BookList extends JFrame implements ActionListener{
 			}
 		}
 		if(o== btnInitList) {
+			tfSearch.setText("");
+			//검색창에 포커스 줬다 빼기(placeholder 나올수 있게)
+			tfSearch.requestFocus();
+			cbSearchBy.setSelectedIndex(0);
+			cbSearchBy.requestFocus();
 			setBooksShow();
 		}
 		if(o == btnSearch) {
@@ -266,41 +317,106 @@ public class BookList extends JFrame implements ActionListener{
 			books = loadBooks();
 			//검색어 받기 
 			String word = tfSearch.getText();
+			//스페이스를 제외한 텍스트들만 키워드에 담는다.
+			String keyword[] = word.split(" ");
+			System.out.println(Arrays.toString(keyword));
+			//콤보박스 선택값 받기(검색분류)
+			String cbSelected = cbSearchBy.getSelectedItem().toString();
 			//검색결과 book들을 담을 Vector생성
 			Vector<Book> foundBooks = new Vector<>();
-			for(int i=0;i<books.size();i++) {
-				//제목 중에 검색어를 포함한 책을 찾아서 found에 제목과 함께 저자를 넣는다 
-				if(books.get(i).getTitle().contains(word)) {
-					foundBooks.add(books.get(i));
+			if(cbSelected.equals("읽고있는책") || cbSelected.equals("읽은책")) {
+				//읽은책,읽고있는책을 선택하고 검색어가 있는경우
+				if(!word.equals("검색어를 입력해주세요.")) {
+					//읽은책,읽고있는 책 중 검색어와 일치하는 도서를 담는다.
+					if(cbSelected.equals("읽고있는책")) {
+						for(int i=0;i<books.size();i++) {
+							if(!books.get(i).getRead() && (searchTitleByKeyword(keyword, books.get(i)) || searchAuthorByKeyword(keyword, books.get(i)))) {
+								foundBooks.add(books.get(i));
+							}
+						}
+					}else if(cbSelected.equals("읽은책")) {
+						for(int i=0;i<books.size();i++) {
+							if(books.get(i).getRead() && (searchTitleByKeyword(keyword, books.get(i)) || searchAuthorByKeyword(keyword, books.get(i)))) {
+								foundBooks.add(books.get(i));
+							}
+						}
+					}
+				}else {
+					//검색어가 없는경우 읽은책or읽고있는책을 모두 담는다.
+					if(cbSelected.equals("읽고있는책")) {
+						for(int i=0;i<books.size();i++) {
+							if(!books.get(i).getRead()) {
+								foundBooks.add(books.get(i));
+							}
+						}
+					}else if(cbSelected.equals("읽은책")) {
+						for(int i=0;i<books.size();i++) {
+							if(books.get(i).getRead()) {
+								foundBooks.add(books.get(i));
+							}
+						}
+					}
+				}
+			}else if(cbSelected.equals("제목")) {
+				for(int i=0;i<books.size();i++) {
+					if(searchTitleByKeyword(keyword, books.get(i))) {
+						foundBooks.add(books.get(i));
+					}
+				}
+			}else if(cbSelected.equals("저자")) {
+				for(int i=0;i<books.size();i++) {
+					if(searchAuthorByKeyword(keyword, books.get(i))) {
+						foundBooks.add(books.get(i));
+					}
 				}
 			}
 			if(foundBooks.size()>0) {
+				//검색결과가 1개 이상인 경우 
 				//검색결과 PnlBook들을 담을 JPanel 생성
 				pnlBook = new PnlBook[foundBooks.size()];
-				
-				System.out.println(foundBooks);
 				for (int i=0;i<foundBooks.size();i++) {
 					pnlBook[i] = new PnlBook(foundBooks.get(i));
 				}
-				setPnlBooksDisplay(pnlBook);
 			}else {
-				if(word.equals("검색어를 입력해주세요.")) {
+				//검색결과가 없는 경우 
+				if(word.equals("검색어를 입력해주세요.") || keyword.length == 0) {
+					//검색어를 넣지 않아서 검색결과가 없는경우 
+					tfSearch.setText("");
+					tfSearch.requestFocus();
+					cbSearchBy.requestFocus();
 					JOptionPane.showMessageDialog(this, "검색어를 입력해주세요.");
-					setBooksShow();
+
 				}else {
-					pnlBook = new PnlBook[0];
-					setPnlBooksDisplay(pnlBook);
+					//검색어를 넣었지만 조건에 맞는 결과가 없는경우 
 					JOptionPane.showMessageDialog(this, "\'"+word+"\' 검색 결과를 찾을 수 없습니다.");
 				}
+				pnlBook = new PnlBook[0];
 			}
+
+			addPnlBookListener(pnlBook);
+			setPnlBooksDisplay(pnlBook);
 		}
 	}
-	private void setPnlBooksDisplay(JPanel[] pnlBook) {
+	private boolean searchTitleByKeyword(String[] keyword, Book book) {
+		for(int j=0;j<keyword.length;j++) {
+			if(book.getTitle().contains(keyword[j])) {
+				return true;
+			}
+		}
+		return false;
+	}
+	private boolean searchAuthorByKeyword(String[] keyword, Book book) {
+		for(int j=0;j<keyword.length;j++) {
+			if(book.getAuthor().contains(keyword[j])) {
+				return true;
+			}
+		}
+		return false;
+	}
+	private void setPnlBooksDisplay(PnlBook[] pnlBook) {
 		for(int i=0;i<pnlBook.length; i++) {
 			pnlBook[i].setBackground(new Color(colors[i%5]));
 			pnlCenterMain.add(pnlBook[i]);
-			pnlCenterMain.revalidate();
-			validate();
 		}
 		
 		//books가 6개 이하일때 GridLayout으로 넓어지지않게 blank인 패널들을 추가해준다.
@@ -310,8 +426,6 @@ public class BookList extends JFrame implements ActionListener{
 				pnlBlank[i] = new JPanel();
 				pnlBlank[i].setPreferredSize(new Dimension(220,50));
 				pnlCenterMain.add(pnlBlank[i]);
-				pnlCenterMain.revalidate();
-				validate();
 			}
 		}
 		if(pnlBook.length < 6){
@@ -321,6 +435,9 @@ public class BookList extends JFrame implements ActionListener{
         }
 		int count = pnlBook.length/ 9 + 7;	//스크롤바 속도
 		scroll.getVerticalScrollBar().setUnitIncrement(count);
+		
+		pnlCenterMain.revalidate();
+		validate();
 	}
 	private void showFrame() {
 		setTitle("Book List");

@@ -31,6 +31,7 @@ public class DatePicker extends JDialog implements ActionListener{
 	private BookSaver owner;
 	public DatePicker(BookSaver owner,Calendar cal, boolean modal) {
 		this.owner = owner;
+		setModal(modal);
 		Dimension dMoveBtns = new Dimension(50,28);
 		btnPreYear = new JButton("°∂ ¿€≥‚");
 		MyUtils.setMyButton(btnPreYear, 0);
@@ -111,6 +112,10 @@ public class DatePicker extends JDialog implements ActionListener{
 			@Override
 			public void windowDeactivated(WindowEvent we) {
 				dispose();
+			}
+			@Override
+			public void windowActivated(WindowEvent we) {
+				toFront();
 			}
 		});
 	}

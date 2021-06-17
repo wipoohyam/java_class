@@ -88,8 +88,18 @@ public class BookSaver extends JDialog implements ActionListener{
 	
 	private BookList blOwner;
 	private ReviewViewer rvOwner;
+	private ReviewList rlOwner;
 	public BookSaver(BookList owner, boolean modal) {
 		this.blOwner = owner;
+		setModal(modal);
+		init();
+		setDisplay();
+		addListeners();
+		showFrame();
+	}
+	public BookSaver(ReviewList owner, boolean modal) {
+		this.rlOwner = owner;
+		setModal(modal);
 		init();
 		setDisplay();
 		addListeners();
@@ -97,6 +107,7 @@ public class BookSaver extends JDialog implements ActionListener{
 	}
 	public BookSaver(ReviewViewer owner, Book book, boolean modal) {
 		this.rvOwner = owner;
+		setModal(modal);
 		init();
 		loadBook(book);
 		setDisplay();
@@ -129,7 +140,7 @@ public class BookSaver extends JDialog implements ActionListener{
 					int idx = fileName.lastIndexOf(".");
 					String ext = fileName.substring(idx);
 					//질문 : 파일필터 복수로는 안되는지?
-					return ext.equalsIgnoreCase(".jpg");
+					return (ext.equalsIgnoreCase(".jpg") || ext.equalsIgnoreCase(".png") || ext.equalsIgnoreCase(".jpeg"));
 				} else {
 					return true;
 				}
@@ -154,7 +165,7 @@ public class BookSaver extends JDialog implements ActionListener{
 		tfBookPages = makeTf(15);
 
 		dRead = new Dimension(103,28);
-		selectedBg = new Color(255,193,7);
+		selectedBg = new Color(0xffc107);
 		unselectedBg = new Color(170,170,170);
 		bRead = new JButton("읽은책");
 		bRead.setActionCommand("selected");
@@ -204,6 +215,7 @@ public class BookSaver extends JDialog implements ActionListener{
 		MyUtils.setStarIcon(bStars, rate, dStars);
 		
 		bConfirm = new JButton("저장");
+		this.getRootPane().setDefaultButton(bConfirm);
 		bCancel = new JButton("취소");
 		
 	}
@@ -402,7 +414,21 @@ public class BookSaver extends JDialog implements ActionListener{
 				if(me.getButton() == MouseEvent.BUTTON1) {
 					pick = DATEFROM;
 					p = new Point(me.getXOnScreen(),me.getYOnScreen()+10);
-					new DatePicker(BookSaver.this, cal,true);
+					DatePicker dp = new DatePicker(BookSaver.this, cal,true);
+					dp.toFront();
+					dp.requestFocus();
+				}
+			}
+		});
+		tfDateTo.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent me) {
+				if(me.getButton() == MouseEvent.BUTTON1 && read) {
+					pick = DATETO;
+					p = new Point(me.getXOnScreen(),me.getYOnScreen()+10);
+					DatePicker dp = new DatePicker(BookSaver.this, cal,true);
+					dp.toFront();
+					dp.requestFocus();
 				}
 			}
 		});
@@ -413,8 +439,12 @@ public class BookSaver extends JDialog implements ActionListener{
 					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 				if (result == JOptionPane.YES_OPTION) {
 					dispose();
-					setOwnersEnabled();
 				}
+			}
+			@Override
+			public void windowActivated(WindowEvent we) {
+				toFront();
+				tfBookTitle.requestFocus();
 			}
 		});
 	}
@@ -429,10 +459,12 @@ public class BookSaver extends JDialog implements ActionListener{
 				fImg = chooser.getSelectedFile();
 				MyUtils.setImgSize(lblBookImg, fImg, dImg);
 			}
+			validate();
 		}
 		if (obj == bDelImg) {
 			MyUtils.setImgSize(lblBookImg, fDefault, dImg);
 			fImg = fDefault;
+			validate();
 		}
 		//읽은책, 읽고있는책 탭처리 
 		if( obj == bRead || obj ==bReading) {
@@ -448,18 +480,25 @@ public class BookSaver extends JDialog implements ActionListener{
 			int result = JOptionPane.showConfirmDialog(this, "작성을 취소하시겠습니까?","작성 취소",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if(result == JOptionPane.YES_OPTION) {
 				dispose();
-				setOwnersEnabled();
 			}
 		}
 		//새책 저장버튼 
-		if(obj == bConfirm && blOwner != null && checkInputsAllright()) {
+		if(obj == bConfirm && blOwner != null && checkInputsNewBook()) {
 			int result = JOptionPane.showConfirmDialog(BookSaver.this, "입력한 내용을 저장하시겠습니까?", "책 저장",
 					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if (result == JOptionPane.YES_OPTION) {
 				saveBook();
 				blOwner.setBooksShow();
 				dispose();
-				blOwner.setEnabled(true);
+			}
+		}
+		if(obj == bConfirm && rlOwner != null && checkInputsNewBook()) {
+			int result = JOptionPane.showConfirmDialog(BookSaver.this, "입력한 내용을 저장하시겠습니까?", "책 저장",
+					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+			if (result == JOptionPane.YES_OPTION) {
+				saveBook();
+				rlOwner.refreshList();
+				dispose();
 			}
 		}
 		//책수정 저장버튼
@@ -467,7 +506,6 @@ public class BookSaver extends JDialog implements ActionListener{
 			int result = JOptionPane.showConfirmDialog(BookSaver.this, "입력한 내용을 저장하시겠습니까?", "책 저장",
 					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if (result == JOptionPane.YES_OPTION) {
-				System.out.println(rate);
 				rvOwner.setTempBook(new Book(
 						fImg,
 						tfBookTitle.getText(),
@@ -483,27 +521,16 @@ public class BookSaver extends JDialog implements ActionListener{
 				rvOwner.setBookInfo(rvOwner.getTempBook());
 				rvOwner.setTaReview(review);
 				dispose();
-				rvOwner.setEnabled(true);
 			}
 		}
 	}
-	private MouseListener dateTo = new MouseAdapter() {
-		public void mousePressed(MouseEvent me) {
-			if(me.getButton() == MouseEvent.BUTTON1) {
-				pick = DATETO;
-				p = new Point(me.getXOnScreen(),me.getYOnScreen()+10);
-				new DatePicker(BookSaver.this, cal,true);
-			}
-		}
-	};
+	
 	private void tfDateToListener(boolean on) {
 		if(on) {
-			tfDateTo.addMouseListener(dateTo);
 			tfDateTo.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			tfDateTo.setBackground(Color.WHITE);
 			tfDateTo.setForeground(Color.BLACK);
 		}else {
-			tfDateTo.removeMouseListener(dateTo);
 			tfDateTo.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			tfDateTo.setBackground(new Color(0xCCCCCC));
 			tfDateTo.setForeground(Color.WHITE);
@@ -554,23 +581,30 @@ public class BookSaver extends JDialog implements ActionListener{
 				JOptionPane.showMessageDialog(this, "페이지수를 적절한 숫자로 입력해주세요.");
 				return false;
 			}
+			if(textTitle.length() == 0 || textAuthor.length() == 0) {
+				JOptionPane.showMessageDialog(this, "제목과 저자는 입력 필수항목입니다.");
+				System.out.println(textTitle+","+textTitle.length());
+				System.out.println(textAuthor+","+textAuthor.length());
+				return false;
+			}
 		} catch(Exception e) {
 			JOptionPane.showMessageDialog(this, "페이지수는 숫자로만 입력해주세요.");
 			return false;
 		}
-		if(textTitle.length() == 0 || textAuthor.length() == 0) {
-			JOptionPane.showMessageDialog(this, "제목과 저자는 입력 필수항목입니다.");
+		return true;
+	}
+	private boolean checkInputsNewBook() {
+
+		Vector<Book> temp = BookList.loadBooks();
+		int check = temp.indexOf(new Book(tfBookTitle.getText().trim(), tfBookAuthor.getText().trim()));
+		if(check != -1) {
+			JOptionPane.showMessageDialog(this, "동일한 제목과 저자의 책이 존재합니다.");
+			return false;
+		}
+		if(!checkInputsAllright()) {
 			return false;
 		}
 		return true;
-	}
-	private void setOwnersEnabled() {
-		try {
-			blOwner.setEnabled(true);
-		} catch(Exception e) {}
-		try {
-			rvOwner.setEnabled(true);
-		} catch(Exception e) {}
 	}
 	private void showFrame() {
 		setTitle("도서 관리");

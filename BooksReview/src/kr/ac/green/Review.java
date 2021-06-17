@@ -11,10 +11,12 @@ import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
 public class Review extends JDialog implements ActionListener {
@@ -29,6 +31,7 @@ public class Review extends JDialog implements ActionListener {
 	private Book book;
 	public Review(BookList owner, Book book, boolean modal) {
 		this.book = book;
+		setModal(modal);
 		blOwner = owner;
 		init();
 		setDisplay();
@@ -37,6 +40,7 @@ public class Review extends JDialog implements ActionListener {
 	}
 	public Review(ReviewList owner, Book book, boolean modal) {
 		this.book = book;
+		setModal(modal);
 		rlOwner = owner;
 		init();
 		setDisplay();
@@ -45,6 +49,7 @@ public class Review extends JDialog implements ActionListener {
 	}
 	public Review(ReviewViewer owner, Book book, boolean modal) {
 		this.book = book;
+		setModal(modal);
 		rvOwner = owner;
 		init();
 		setDisplay();
@@ -53,12 +58,19 @@ public class Review extends JDialog implements ActionListener {
 	}
 	
 	public void init() {
+		try {
+			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		taReview = new JTextArea(20, 34);
 		taReview.setLineWrap(true);
 		taReview.setText(book.getReview());
 		taReview.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 16));
 		btnSave = new JButton("저장");
 		btnCancel = new JButton("취소");
+		MyUtils.setMyButton(btnSave, 1);
+		MyUtils.setMyButton(btnCancel, 1);
 	}
 	
 	public void setDisplay() {
@@ -86,10 +98,14 @@ public class Review extends JDialog implements ActionListener {
 						JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 				if (result == JOptionPane.YES_OPTION) {
 					dispose();
-					setOwnersEnabled();
 				}
 			}
+			@Override
+			public void windowActivated(WindowEvent we) {
+				toFront();
+			}
 		});
+		
 		btnSave.addActionListener(this);
 		btnCancel.addActionListener(this);
 	}
@@ -100,18 +116,13 @@ public class Review extends JDialog implements ActionListener {
 			int result = JOptionPane.showConfirmDialog(this, "작성을 취소하시겠습니까?","작성 취소",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if(result == JOptionPane.YES_OPTION) {
 				dispose();
-				setOwnersEnabled();
 			}else if(result == JOptionPane.NO_OPTION) {}else {}
 		}
 		if(o == btnSave && blOwner != null) {
-			int result = JOptionPane.showConfirmDialog(this, "저장하시겠습니까?","후기 저장",JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+			int result = JOptionPane.showConfirmDialog(this, "저장하시겠습니까?","후기 저장",JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if(result == JOptionPane.YES_OPTION) {
 				saveReview();
 				dispose();
-				blOwner.setEnabled(true);
-			}else if(result == JOptionPane.NO_OPTION) {
-				dispose();
-				blOwner.setEnabled(true);
 			}else {}
 		}
 		if(o == btnSave && rlOwner != null) {
@@ -119,10 +130,6 @@ public class Review extends JDialog implements ActionListener {
 			if(result == JOptionPane.YES_OPTION) {
 				saveReview();
 				dispose();
-				rlOwner.setEnabled(true);
-			}else if(result == JOptionPane.NO_OPTION) {
-				dispose();
-				rlOwner.setEnabled(true);
 			}else {}
 		}
 		if(o == btnSave && rvOwner != null) {
@@ -130,23 +137,8 @@ public class Review extends JDialog implements ActionListener {
 			if(result == JOptionPane.YES_OPTION) {
 				rvOwner.setTaReview(taReview.getText());
 				dispose();
-				rvOwner.setEnabled(true);
-			}else if(result == JOptionPane.NO_OPTION) {
-				dispose();
-				rvOwner.setEnabled(true);
 			}else {}
 		}
-	}
-	private void setOwnersEnabled() {
-		try {
-			blOwner.setEnabled(true);
-		} catch (Exception e) {}
-		try {
-			rlOwner.setEnabled(true);
-		} catch(Exception e) {}
-		try {
-			rvOwner.setEnabled(true);
-		} catch(Exception e) {}
 	}
 	private void saveReview() {
 		Vector<Book> temp = BookList.loadBooks();

@@ -44,8 +44,8 @@ public class PnlReviewList extends JPanel {
 	public void init() {
 		//사용자가 사진 넣더라도 사이즈는 통일해두는 게 좋을 것 같아서 사이즈 잡아뒀어요!
 		lblPhoto = new JLabel();
-		lblPhoto.setPreferredSize(dPhoto);
 		dPhoto = new Dimension(new Dimension(110, 170));
+		lblPhoto.setPreferredSize(dPhoto);
 		fDefault = new File("img/needBookImg.jpg");
 		if(book.getCover() != null) {
 			MyUtils.setImgSize(lblPhoto, book.getCover() , dPhoto);

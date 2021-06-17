@@ -5,6 +5,8 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
@@ -53,9 +55,11 @@ abstract class MyUtils {
 		if(c instanceof JLabel) {
 			JLabel lbl = (JLabel) c;
 			lbl.setIcon(new ImageIcon(newImg));
+			lbl.setVerticalAlignment(JLabel.CENTER);
 		}else if(c instanceof JButton) {
 			JButton b = (JButton) c;
 			b.setIcon(new ImageIcon(newImg));
+			b.setVerticalAlignment(JButton.CENTER);
 		}
 	}
 	
@@ -110,11 +114,23 @@ abstract class MyUtils {
 		btn.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
 		btn.setBackground(Color.WHITE);
 		if(btnType == DEFAULTBTN) {
-			btn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+			btn.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
 			btn.setPreferredSize(new Dimension(70,26));
 		}else if(btnType == CONFIRMBTN) {
-			btn.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
+			btn.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
 			btn.setPreferredSize(new Dimension(100,36));
 		}
+		btn.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				btn.setBackground(new Color(0xffc107));
+				btn.setForeground(Color.WHITE);
+			}
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				btn.setBackground(Color.WHITE);
+				btn.setForeground(Color.BLACK);
+			}
+		});
 	}
 }

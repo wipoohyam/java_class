@@ -1,0 +1,9 @@
+CREATE TABLE students(
+	sid		INT			PRIMARY KEY	AUTO_INCREMENT,
+	sname	CHAR(20)	NOT NULL,
+	stel	CHAR(20)	NOT NULL,
+	sgrade	INT			NOT NULL,
+	sclass	CHAR(10)	NOT NULL
+);
+
+DROP TABLE students;
